@@ -1,0 +1,39 @@
+<div class="login-container">
+  <div class="login-card">
+    <div class="logo-icon">⚽</div>
+    
+    <h2>Torneo FIFA 2026</h2>
+    <p class="subtitle">Acceso al sistema de gestión</p>
+    
+    <div class="input-group">
+      <input 
+        type="text" 
+        placeholder="Usuario" 
+        [(ngModel)]="credenciales.username"
+        name="username"
+      >
+    </div>
+    
+    <div class="input-group password-container">
+      <input 
+        [type]="verPassword ? 'text' : 'password'" 
+        placeholder="Contraseña" 
+        [(ngModel)]="credenciales.password"
+        name="password"
+      >
+      <span class="toggle-icon" (click)="togglePassword()">
+        {{ verPassword ? '👁️‍🗨️' : '👁️' }}
+      </span>
+    </div>
+
+    <button class="btn-login" (click)="iniciarSesion()">
+      Ingresar al Sistema
+    </button>
+  </div>
+
+  @if (mensajeToast) {
+    <div class="toast-notification" [ngClass]="{'toast-error': mensajeToast.includes('❌')}">
+      {{ mensajeToast }}
+    </div>
+  }
+</div>

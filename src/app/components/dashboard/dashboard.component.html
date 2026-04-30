@@ -1,0 +1,574 @@
+<div class="dashboard-layout">
+  
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo">⚽</div>
+      <h2>FIFA 2026</h2>
+    </div>
+
+    <div class="user-profile">
+      <div class="avatar">👤</div>
+      <div class="info">
+        <p class="role-badge" [ngClass]="{'admin-badge': rolUsuario === 'FUNCIONARIO'}">
+          {{ rolUsuario }}
+        </p>
+      </div>
+    </div>
+
+    <nav class="menu">
+      <p class="menu-title">GENERAL</p>
+      
+      <a class="menu-item" 
+         [class.active]="vistaActual === 'resumen'" 
+         (click)="cambiarVista('resumen')">
+        📊 Resumen de Grupos
+      </a>
+      
+      <a class="menu-item" 
+         [class.active]="vistaActual === 'tabla'" 
+         (click)="cambiarVista('tabla')">
+        🏆 Tabla General
+      </a>
+
+      <a class="menu-item" 
+         [class.active]="vistaActual === 'llaves'" 
+         (click)="cambiarVista('llaves')">
+        ⚔️ Eliminación Directa
+      </a>
+
+      @if (rolUsuario === 'FUNCIONARIO') {
+        <p class="menu-title" style="margin-top: 30px;">ADMINISTRACIÓN</p>
+        
+        <a class="menu-item" 
+           [class.active]="vistaActual === 'inscribir'" 
+           (click)="cambiarVista('inscribir')">
+          ⚙️ Inscribir Equipos
+        </a>
+        
+        <a class="menu-item" 
+           [class.active]="vistaActual === 'partidos'" 
+           (click)="cambiarVista('partidos')">
+          📝 Registrar Partidos
+        </a>
+      }
+    </nav>
+
+    <button class="btn-logout" (click)="cerrarSesion()">
+      🚪 Cerrar Sesión
+    </button>
+  </aside>
+
+  <main class="main-content">
+    <header class="top-bar">
+      <h1>Panel de Control</h1>
+      <p>Bienvenido al sistema de gestión del mundial.</p>
+    </header>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">⚽</div>
+        <div class="stat-info">
+          <p>Goles Totales</p>
+          <h3>{{ totalGolesTorneo }}</h3>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🔥</div>
+        <div class="stat-info">
+          <p>Mejor Ataque</p>
+          <h3>{{ mejorAtaque }}</h3>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🌍</div>
+        <div class="stat-info">
+          <p>Equipos Compitiendo</p>
+          <h3>48</h3>
+        </div>
+      </div>
+    </div>
+
+    <div class="content-area">
+      
+      @if (vistaActual === 'resumen') {
+        <div class="groups-grid view-fade-in">
+          @for (grupo of resumenGrupos; track $index) {
+            <div class="group-card">
+              <div class="group-header">
+                <h3>Grupo {{ grupo.grupo }}</h3>
+              </div>
+              <div class="group-body">
+                @for (equipo of grupo.equipos; track $index) {
+                  <div class="team-row" 
+                       [ngClass]="{'leader': $index === 0, 'runner-up': $index === 1, 'eliminado-grupo': $index > 1}">
+                    
+                    @if ($index === 0) { <span class="medal">🥇</span> }
+                    @if ($index === 1) { <span class="medal">🥈</span> }
+                    @if ($index > 1) { <span class="medal-vacia" style="margin-right: 25px;"></span> }
+
+                    <span class="team-name" [style.color]="$index > 1 ? '#a0a4b8' : 'white'">
+                      {{ obtenerBandera(equipo.nombre) }} {{ equipo.nombre }}
+                    </span>
+                  </div>
+                } @empty {
+                  <div class="team-row" style="background: transparent; justify-content: center; flex-direction: column; padding: 20px 0;">
+                    <span style="font-size: 24px; margin-bottom: 5px;">🏟️</span>
+                    <span style="color: #8a8d9b; font-size: 13px;">Sin equipos</span>
+                  </div>
+                }
+              </div>
+              <div class="group-footer">
+                <button class="btn-details" (click)="cambiarVista('tabla')">Ver Tabla Completa</button>
+              </div>
+            </div>
+          } @empty {
+            <div class="empty-state-container">
+              <div class="empty-state-icon">⏳</div>
+              <h3>Cargando el torneo...</h3>
+              <p>Conectando con la base de datos de la FIFA.</p>
+            </div>
+          }
+        </div>
+
+        <div class="third-places-section view-fade-in" style="margin-top: 50px;">
+          <h2 style="color: #ffa502; text-align: center; border-bottom: 2px solid rgba(255, 165, 2, 0.2); padding-bottom: 15px;">
+            🔥 Tabla de los Mejores Terceros
+          </h2>
+          <p style="text-align: center; color: #a0a4b8; margin-bottom: 30px;">
+            Los 8 equipos con mejor rendimiento que ocuparon la tercera posición en sus grupos.
+          </p>
+
+          @if (mejoresTerceros.length > 0) {
+            <div class="table-responsive" style="border: 1px solid rgba(255, 165, 2, 0.3); border-radius: 15px; max-width: 800px; margin: 0 auto;">
+              <table class="fifa-table third-table">
+                <thead>
+                  <tr>
+                    <th>Pos</th>
+                    <th style="text-align: left;">Selección</th>
+                    <th>PTS</th>
+                    <th>GF</th>
+                    <th>GC</th>
+                    <th>+/-</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (equipo of mejoresTerceros; track equipo.id; let i = $index) {
+                    <tr>
+                      <td>
+                        <span class="pos-badge" [ngClass]="{'clasificado-tercero': i < 8}">{{ i + 1 }}</span>
+                      </td>
+                      <td style="text-align: left; font-weight: bold; color: white;">
+                        {{ obtenerBandera(equipo.nombre) }} {{ equipo.nombre }}
+                      </td>
+                      <td style="color: #ffa502; font-weight: bold; font-size: 18px;">{{ equipo.puntos }}</td>
+                      <td>{{ equipo.golesFavor }}</td>
+                      <td>{{ equipo.golesContra }}</td>
+                      <td [ngClass]="{'positive-dif': (equipo.golesFavor - equipo.golesContra) > 0, 'negative-dif': (equipo.golesFavor - equipo.golesContra) < 0}">
+                        <span *ngIf="(equipo.golesFavor - equipo.golesContra) > 0">+</span>{{ equipo.golesFavor - equipo.golesContra }}
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          } @else {
+            <div class="empty-state-container" style="border-color: rgba(255, 165, 2, 0.2); max-width: 800px; margin: 0 auto;">
+              <div class="empty-state-icon" style="filter: drop-shadow(0 0 10px rgba(255, 165, 2, 0.2));">📊</div>
+              <h3 style="color: #ffa502;">Esperando resultados</h3>
+              <p>Inscribe al menos 3 equipos por grupo para generar la tabla de mejores terceros.</p>
+            </div>
+          }
+        </div>
+
+        <div class="eliminated-section view-fade-in" style="margin-top: 50px;">
+          <h2 style="color: #ecf0f1; text-align: center; border-bottom: 2px solid rgba(236, 240, 241, 0.2); padding-bottom: 15px;">
+            🛑 Selecciones No Clasificadas
+          </h2>
+          <p style="text-align: center; color: #a0a4b8; margin-bottom: 30px;">
+            Los 16 equipos que no lograron los puntos necesarios para avanzar a la fase final.
+          </p>
+
+          @if (equiposEliminadosFaseGrupos.length > 0) {
+            <div class="table-responsive" style="border: 1px solid rgba(236, 240, 241, 0.3); border-radius: 15px; max-width: 800px; margin: 0 auto; margin-bottom: 30px;">
+              <table class="fifa-table eliminated-table">
+                <thead>
+                  <tr>
+                    <th>Pos</th>
+                    <th style="text-align: left;">Selección</th>
+                    <th>PTS</th>
+                    <th>GF</th>
+                    <th>GC</th>
+                    <th>+/-</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (equipo of equiposEliminadosFaseGrupos; track equipo.id; let i = $index) {
+                    <tr>
+                      <td>
+                        <span class="pos-badge eliminado-badge">{{ i + 33 }}</span>
+                      </td>
+                      <td style="text-align: left; font-weight: bold; color: #5a5c69; text-decoration: line-through;">
+                        {{ obtenerBandera(equipo.nombre) }} {{ equipo.nombre }}
+                      </td>
+                      <td style="color: #a0a4b8; font-weight: bold; font-size: 18px;">{{ equipo.puntos }}</td>
+                      <td>{{ equipo.golesFavor }}</td>
+                      <td>{{ equipo.golesContra }}</td>
+                      <td [ngClass]="{'positive-dif': (equipo.golesFavor - equipo.golesContra) > 0, 'negative-dif': (equipo.golesFavor - equipo.golesContra) < 0}">
+                        <span *ngIf="(equipo.golesFavor - equipo.golesContra) > 0">+</span>{{ equipo.golesFavor - equipo.golesContra }}
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          } @else {
+            <div class="empty-state-container" style="border-color: rgba(236, 240, 241, 0.2); max-width: 800px; margin: 0 auto; margin-bottom: 30px;">
+              <div class="empty-state-icon" style="filter: drop-shadow(0 0 10px rgba(236, 240, 241, 0.2));">✈️</div>
+              <h3 style="color: #ecf0f1;">Todos siguen en competencia</h3>
+              <p>Inscribe a los 48 equipos para descubrir quiénes se despiden del mundial en fase de grupos.</p>
+            </div>
+          }
+        </div>
+      }
+
+      @if (vistaActual === 'tabla') {
+        <div class="admin-panel view-fade-in">
+          <div class="form-card" style="max-width: 950px;">
+            <h2 style="color: #00ff88; margin-top: 0; text-align: center;">🏆 Ranking Global del Torneo</h2>
+            <p style="color: #a0a4b8; margin-bottom: 25px; text-align: center;">Clasificación de los 48 equipos según el reglamento de la FIFA.</p>
+
+            <div class="filters-container">
+              <div class="search-box">
+                <span>🔍</span>
+                <input type="text" placeholder="Buscar selección..." [(ngModel)]="textoBusqueda" (input)="aplicarFiltros()">
+                @if (textoBusqueda) {
+                  <span style="cursor: pointer; padding: 0 5px; color: #ff4757;" title="Limpiar búsqueda" (click)="limpiarBusqueda()">✖️</span>
+                }
+              </div>
+              
+              <select [(ngModel)]="confederacionFiltro" (change)="aplicarFiltros()" class="custom-select filter-select">
+                <option value="TODAS">🌍 Todas las Confederaciones</option>
+                <option value="CONMEBOL">CONMEBOL (Sudamérica)</option>
+                <option value="UEFA">UEFA (Europa)</option>
+                <option value="CONCACAF">CONCACAF (Norte/Centroamérica)</option>
+                <option value="AFC">AFC (Asia)</option>
+                <option value="CAF">CAF (África)</option>
+              </select>
+              
+              <span style="color: #00ff88; font-weight: bold; align-self: center; margin-left: 10px; white-space: nowrap;">
+                Mostrando {{ tablaGeneralFiltrada.length }} equipos
+              </span>
+              
+            </div>
+
+            <div class="table-responsive">
+              <table class="fifa-table">
+                <thead>
+                  <tr>
+                    <th title="Posición en el torneo">Pos</th>
+                    <th style="text-align: left;" title="País participante">Selección</th>
+                    <th title="Asociación Continental">Confederación</th>
+                    <th title="Partidos Jugados">PJ</th>
+                    <th title="Puntos Totales (3 victoria, 1 empate)">PTS</th>
+                    <th title="Goles a Favor">GF</th>
+                    <th title="Goles en Contra">GC</th>
+                    <th title="Diferencia de Goles">+/-</th>
+                    <th title="Tarjetas Amarillas (Fair Play)">🟨</th>
+                    <th title="Tarjetas Rojas (Fair Play)">🟥</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (equipo of tablaGeneralFiltrada; track equipo.id; let i = $index) {
+                    <tr>
+                      <td>
+                        <span class="pos-badge" [ngClass]="{'clasificado': i < 32, 'eliminado': i >= 32}">
+                          {{ i + 1 }}
+                        </span>
+                      </td>
+                      
+                      <td style="text-align: left; font-weight: bold;" [ngStyle]="{'text-decoration': equipo.eliminado ? 'line-through' : 'none', 'color': equipo.eliminado ? '#ff4757' : 'white'}">
+                        {{ obtenerBandera(equipo.nombre) }} {{ equipo.nombre }}
+                        @if (equipo.eliminado) { <span style="font-size: 12px; margin-left: 5px;" title="Eliminado del torneo">💀</span> }
+                      </td>
+
+                      <td>{{ equipo.confederacion }}</td>
+                      <td style="font-weight: bold; color: #a0a4b8;">{{ equipo.partidosJugados }}</td>
+                      <td class="pts-col">{{ equipo.puntos }}</td>
+                      <td>{{ equipo.golesFavor }}</td>
+                      <td>{{ equipo.golesContra }}</td>
+                      <td [ngClass]="{'positive-dif': (equipo.golesFavor - equipo.golesContra) > 0, 'negative-dif': (equipo.golesFavor - equipo.golesContra) < 0}">
+                        <span *ngIf="(equipo.golesFavor - equipo.golesContra) > 0">+</span>{{ equipo.golesFavor - equipo.golesContra }}
+                      </td>
+                      <td style="color: #ffd700; font-weight: bold;">{{ equipo.tarjetasAmarillas }}</td>
+                      <td style="color: #ff4757; font-weight: bold;">{{ equipo.tarjetasRojas }}</td>
+                    </tr>
+                  } @empty {
+                    <tr>
+                      <td colspan="10" style="padding: 40px; text-align: center; color: #8a8d9b;">
+                        <span style="font-size: 35px; display: block; margin-bottom: 10px;">👻</span>
+                        No hay equipos que coincidan con "{{ textoBusqueda }}" en esta confederación.
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      }
+
+      @if (vistaActual === 'inscribir') {
+        <div class="admin-panel view-fade-in">
+          <div class="form-card">
+            <h2 style="color: #00ff88; margin-top: 0;">⚙️ Inscripción de Equipos</h2>
+            <p style="color: #a0a4b8; margin-bottom: 25px;">Asigna los equipos a sus respectivos grupos validando las reglas de la FIFA.</p>
+            
+            @if (torneoLleno) {
+              <div style="background: rgba(255, 71, 87, 0.1); border-left: 4px solid #ff4757; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                <h3 style="color: #ff4757; margin-top: 0; display: flex; align-items: center; gap: 10px;">
+                  <span>🔒</span> Inscripciones Cerradas
+                </h3>
+                <p style="color: #a0a4b8; margin-bottom: 0; line-height: 1.5;">
+                  El cupo máximo de 48 selecciones ya ha sido alcanzado. El torneo está en curso y no se pueden modificar los grupos para garantizar la integridad de los datos.
+                </p>
+              </div>
+            } @else {
+              <div class="form-group">
+                <label for="equipoSelect">1. Seleccionar Equipo:</label>
+                <select id="equipoSelect" class="custom-select" [(ngModel)]="equipoSeleccionado">
+                  <option value="" disabled selected>Elige un equipo...</option>
+                  @for (equipo of listaEquipos; track equipo.id) {
+                    <option [value]="equipo.id">
+                      {{ equipo.nombre }} ({{ equipo.confederacion }})
+                    </option>
+                  }
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="grupoSelect">2. Asignar al Grupo:</label>
+                <select id="grupoSelect" class="custom-select" [(ngModel)]="grupoSeleccionado">
+                  <option value="" disabled selected>Elige un grupo...</option>
+                  @for (letra of gruposDisponibles; track letra) {
+                    <option [value]="letra">Grupo {{ letra }}</option>
+                  }
+                </select>
+              </div>
+
+              <button class="btn-submit" (click)="registrarEquipo()">Registrar en el Torneo</button>
+            }
+            </div>
+        </div>
+      }
+
+      @if (vistaActual === 'partidos') {
+        <div class="admin-panel view-fade-in">
+          <div class="form-card scoreboard-card" style="max-width: 700px;">
+            <h2 style="color: #00ff88; margin-top: 0; text-align: center;">📝 Registrar Marcador</h2>
+            <p style="color: #a0a4b8; margin-bottom: 25px; text-align: center;">Ingresa el resultado final del encuentro y las tarjetas (Fair Play).</p>
+            
+            <div class="form-group" style="flex-direction: row; align-items: center; justify-content: center; gap: 10px; margin-bottom: 25px; background: rgba(255,71,87,0.1); padding: 12px; border-radius: 10px; border: 1px solid rgba(255,71,87,0.3);">
+              <input type="checkbox" id="elimSwitch" [(ngModel)]="esEliminacion" style="width: 18px; height: 18px; accent-color: #ff4757; cursor: pointer;">
+              <label for="elimSwitch" style="margin: 0; color: #ff4757; cursor: pointer;">🔥 Activar Muerte Súbita</label>
+            </div>
+
+            <div class="scoreboard-container">
+              
+              <div class="team-score-section">
+                <label>Equipo Local</label>
+                <div class="fila-inputs">
+                  <select class="custom-select" [(ngModel)]="equipoLocalPartido" autofocus>
+                    <option value="" disabled selected>Selecciona...</option>
+                    @for (equipo of equiposParaJugar; track equipo.id) {
+                      <option [value]="equipo.id">{{ obtenerBandera(equipo.nombre) }} {{ equipo.nombre }}</option>
+                    }
+                  </select>
+                  
+                  <input type="number" class="score-input" [(ngModel)]="golesLocal" min="0" placeholder="0">
+                  
+                  <div class="cards-inputs">
+                    <div class="card-box yellow"><input type="number" [(ngModel)]="amarillasLocal" min="0" placeholder="0"></div>
+                    <div class="card-box red"><input type="number" [(ngModel)]="rojasLocal" min="0" placeholder="0"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="vs-badge">VS</div>
+
+              <div class="team-score-section">
+                <label>Equipo Visitante</label>
+                <div class="fila-inputs">
+                  <select class="custom-select" [(ngModel)]="equipoVisitantePartido">
+                    <option value="" disabled selected>Selecciona...</option>
+                    @for (equipo of equiposParaJugar; track equipo.id) {
+                      <option [value]="equipo.id">{{ obtenerBandera(equipo.nombre) }} {{ equipo.nombre }}</option>
+                    }
+                  </select>
+                  
+                  <input type="number" class="score-input" [(ngModel)]="golesVisitante" min="0" placeholder="0">
+                  
+                  <div class="cards-inputs">
+                    <div class="card-box yellow"><input type="number" [(ngModel)]="amarillasVisitante" min="0" placeholder="0"></div>
+                    <div class="card-box red"><input type="number" [(ngModel)]="rojasVisitante" min="0" placeholder="0"></div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            @if (esEliminacion && golesLocal === golesVisitante && golesLocal !== null) {
+              <div class="penalties-section view-fade-in" style="margin-top: 25px; text-align: center; background: rgba(255,215,0,0.1); padding: 20px; border-radius: 10px; border: 1px dashed #ffd700;">
+                <h4 style="color: #ffd700; margin-top: 0; margin-bottom: 15px; font-size: 16px;">🥅 Definición por Penales</h4>
+                
+                <div style="display: flex; justify-content: center; gap: 15px; align-items: center;">
+                  <span style="color: #ffd700; font-size: 13px; font-weight: bold; text-transform: uppercase;">Local ➡</span>
+                  <input type="number" class="score-input" [(ngModel)]="penalesLocal" min="0" placeholder="0" style="border-color: #ffd700; color: #ffd700;">
+                  <span style="color: #ffd700; font-weight: bold; font-size: 18px; margin: 0 10px;">PENALES</span>
+                  <input type="number" class="score-input" [(ngModel)]="penalesVisitante" min="0" placeholder="0" style="border-color: #ffd700; color: #ffd700;">
+                  <span style="color: #ffd700; font-size: 13px; font-weight: bold; text-transform: uppercase;">⬅ Visitante</span>
+                </div>
+              </div>
+            }
+
+            <button class="btn-submit" style="margin-top: 25px;" 
+                    (click)="guardarPartido()" 
+                    [disabled]="guardandoPartido" 
+                    [ngStyle]="{'opacity': guardandoPartido ? '0.5' : '1', 'cursor': guardandoPartido ? 'not-allowed' : 'pointer'}">
+              {{ guardandoPartido ? '⏳ Procesando...' : 'Guardar Resultado' }}
+            </button>
+          </div>
+        </div>
+      }
+
+      @if (vistaActual === 'llaves') {
+        <div class="tournament-tree-container view-fade-in">
+          
+          <div class="tree-header">
+            <h2 style="color: #00ff88; margin-bottom: 5px;">⚔️ Cuadro de Eliminación Directa</h2>
+            <p style="color: #a0a4b8;">Desde Dieciseisavos hasta la Gran Final</p>
+          </div>
+
+          <div class="bracket-wrapper">
+            
+            <div class="round-column">
+              <div class="round-title">Dieciseisavos</div>
+              <div class="matches-container">
+                @for (m of llaves32; track $index) {
+                  <div class="match-card">
+                    <div class="team-slot" [class.winner]="m.local && !m.local.eliminado">
+                      <span class="flag">{{ obtenerBandera(m.local?.nombre || 'TBD') }}</span>
+                      <span class="name">{{ m.local?.nombre || 'TBD' }}</span>
+                    </div>
+                    <div class="match-info">VS</div>
+                    <div class="team-slot" [class.winner]="m.visitante && !m.visitante.eliminado">
+                      <span class="flag">{{ obtenerBandera(m.visitante?.nombre || 'TBD') }}</span>
+                      <span class="name">{{ m.visitante?.nombre || 'TBD' }}</span>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+
+            <div class="round-column">
+              <div class="round-title">Octavos de Final</div>
+              <div class="matches-container">
+                @for (m of llaves16; track $index) {
+                  <div class="match-card">
+                    <div class="team-slot" [class.winner]="m.local && !m.local.eliminado">
+                      <span class="flag">{{ obtenerBandera(m.local?.nombre || 'TBD') }}</span>
+                      <span class="name">{{ m.local?.nombre || 'TBD' }}</span>
+                    </div>
+                    <div class="match-info">VS</div>
+                    <div class="team-slot" [class.winner]="m.visitante && !m.visitante.eliminado">
+                      <span class="flag">{{ obtenerBandera(m.visitante?.nombre || 'TBD') }}</span>
+                      <span class="name">{{ m.visitante?.nombre || 'TBD' }}</span>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+
+            <div class="round-column">
+              <div class="round-title">Cuartos</div>
+              <div class="matches-container">
+                @for (m of llaves8; track $index) {
+                  <div class="match-card">
+                    <div class="team-slot" [class.winner]="m.local && !m.local.eliminado">
+                      <span class="flag">{{ obtenerBandera(m.local?.nombre || 'TBD') }}</span>
+                      <span class="name">{{ m.local?.nombre || 'TBD' }}</span>
+                    </div>
+                    <div class="match-info">VS</div>
+                    <div class="team-slot" [class.winner]="m.visitante && !m.visitante.eliminado">
+                      <span class="flag">{{ obtenerBandera(m.visitante?.nombre || 'TBD') }}</span>
+                      <span class="name">{{ m.visitante?.nombre || 'TBD' }}</span>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+
+            <div class="round-column">
+              <div class="round-title">Semifinal</div>
+              <div class="matches-container">
+                @for (m of llaves4; track $index) {
+                  <div class="match-card">
+                    <div class="team-slot" [class.winner]="m.local && !m.local.eliminado">
+                      <span class="flag">{{ obtenerBandera(m.local?.nombre || 'TBD') }}</span>
+                      <span class="name">{{ m.local?.nombre || 'TBD' }}</span>
+                    </div>
+                    <div class="match-info">VS</div>
+                    <div class="team-slot" [class.winner]="m.visitante && !m.visitante.eliminado">
+                      <span class="flag">{{ obtenerBandera(m.visitante?.nombre || 'TBD') }}</span>
+                      <span class="name">{{ m.visitante?.nombre || 'TBD' }}</span>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+
+            <div class="round-column final-column">
+              <div class="round-title">Gran Final</div>
+              <div class="matches-container" style="justify-content: center;">
+                <div class="match-card final-card">
+                  <div class="team-slot" [class.winner]="llaves2[0].local && !llaves2[0].local.eliminado">
+                    <span class="flag">{{ obtenerBandera(llaves2[0].local?.nombre || 'TBD') }}</span>
+                    <span class="name">{{ llaves2[0].local?.nombre || 'TBD' }}</span>
+                  </div>
+                  <div class="match-info" style="color: #ffd700; font-size: 24px; text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);">🏆</div>
+                  <div class="team-slot" [class.winner]="llaves2[0].visitante && !llaves2[0].visitante.eliminado">
+                    <span class="flag">{{ obtenerBandera(llaves2[0].visitante?.nombre || 'TBD') }}</span>
+                    <span class="name">{{ llaves2[0].visitante?.nombre || 'TBD' }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="round-column champion-column view-fade-in">
+              <div class="matches-container" style="justify-content: center;">
+                <div class="champion-card">
+                  <div class="champion-header">🏆 CAMPEÓN DEL MUNDO 🏆</div>
+                  <div class="trophy-icon">🏆</div>
+                  <div class="champion-name">
+                    @if (campeon) {
+                      {{ obtenerBandera(campeon.nombre) }} {{ campeon.nombre }}
+                    } @else {
+                      <span style="color: rgba(255, 215, 0, 0.5); font-size: 18px; text-shadow: none;">TBD (Por definir)</span>
+                    }
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div> 
+        </div> 
+      }
+    </div>
+  </main>
+
+@if (mensajeToast) {
+  <div class="toast-notification" [ngClass]="{'toast-error': mensajeToast.includes('❌'), 'toast-warning': mensajeToast.includes('⚠️')}">
+    {{ mensajeToast }}
+  </div>
+}
+
+</div>

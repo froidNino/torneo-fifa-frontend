@@ -1,0 +1,143 @@
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #1a1c29 0%, #090a0f 100%);
+}
+
+.login-card {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  padding: 50px 40px;
+  width: 100%;
+  max-width: 350px;
+  text-align: center;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+  color: white;
+}
+
+.logo-icon {
+  font-size: 50px;
+  margin-bottom: 10px;
+  animation: float 3s ease-in-out infinite;
+}
+
+h2 {
+  margin: 0;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.subtitle {
+  color: #8a8d9b;
+  font-size: 14px;
+  margin-bottom: 30px;
+}
+
+.input-group {
+  margin-bottom: 20px;
+}
+
+input {
+  width: 100%;
+  padding: 15px 20px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  color: white;
+  font-size: 15px;
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+}
+
+input:focus {
+  outline: none;
+  border-color: #00ff88;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.btn-login {
+  width: 100%;
+  padding: 15px;
+  background: #00ff88;
+  color: #090a0f;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  margin-top: 10px;
+}
+
+.btn-login:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 255, 136, 0.4);
+}
+
+.btn-login:active {
+  transform: translateY(0);
+}
+
+.mensaje {
+  margin-top: 20px;
+  font-weight: 600;
+  min-height: 20px;
+}
+
+.error { color: #ff4757; }
+.exito { color: #00ff88; }
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+.password-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.toggle-icon {
+  position: absolute;
+  right: 15px;
+  cursor: pointer;
+  font-size: 18px;
+  user-select: none;
+  opacity: 0.6;
+  transition: opacity 0.3s;
+}
+
+.toggle-icon:hover {
+  opacity: 1;
+}
+
+/* --- NOTIFICACIONES TOAST ESTILO MODERNO --- */
+.toast-notification {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  background: #13151f;
+  color: white;
+  padding: 15px 25px;
+  border-radius: 12px;
+  border-left: 4px solid #00ff88; /* Verde por defecto para el éxito */
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  font-weight: bold;
+  z-index: 9999;
+  animation: slideIn 0.3s ease-out forwards;
+}
+
+/* Cambia el borde a rojo cuando el login falla */
+.toast-error {
+  border-left: 4px solid #ff4757;
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
